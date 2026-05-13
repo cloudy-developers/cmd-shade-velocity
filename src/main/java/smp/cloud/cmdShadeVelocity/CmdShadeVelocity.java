@@ -46,7 +46,7 @@ public class CmdShadeVelocity {
             Path file = dataDir.resolve("aliases.properties");
             if (!Files.exists(file)) {
                 Files.writeString(file, """
-                        # CommandHider aliases
+                        # CmdShadeVelocity aliases
                         # Map a command label to a custom permission node.
                         # If the player has the permission, the command is visible and usable;
                         # otherwise it is hidden and blocked.
