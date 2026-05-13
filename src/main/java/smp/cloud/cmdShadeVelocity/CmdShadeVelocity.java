@@ -10,8 +10,9 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.slf4j.Logger;
+import smp.cloud.cmdShadeVelocity.config.Config;
 import smp.cloud.cmdShadeVelocity.resolvers.PermissionResolver;
 
 import java.io.IOException;
@@ -24,6 +25,8 @@ public class CmdShadeVelocity {
     private final Path dataDir;
 
     private PermissionResolver resolver;
+    private Component unknownCommandMessage;
+    private boolean hideNamespacedCommands;
 
     @Inject
     public CmdShadeVelocity(Logger logger, @DataDirectory Path dataDir) {
@@ -33,8 +36,21 @@ public class CmdShadeVelocity {
 
     @Subscribe
     public void onProxyInit(ProxyInitializeEvent event) {
+        Config config = Config.load(dataDir, logger);
+        this.hideNamespacedCommands = config.hideNamespacedCommands();
+        this.unknownCommandMessage = parseMessage(config.unknownCommandMessage());
+
         this.resolver = new PermissionResolver(loadAliases());
         logger.info("\u001B[36mSuccessfully enabled.\u001B[0m");
+    }
+
+    private Component parseMessage(String raw) {
+        try {
+            return MiniMessage.miniMessage().deserialize(raw);
+        } catch (Exception e) {
+            logger.warn("Invalid MiniMessage in config.toml ({}); falling back to default.", e.getMessage());
+            return MiniMessage.miniMessage().deserialize(Config.DEFAULT_UNKNOWN_COMMAND_MESSAGE);
+        }
     }
 
     private Map<String, String> loadAliases() {
@@ -84,7 +100,7 @@ public class CmdShadeVelocity {
         for (CommandNode<?> child : children) {
             String label = child.getName();
 
-            if (label.indexOf(':') >= 0) {
+            if (hideNamespacedCommands && label.indexOf(':') >= 0) {
                 root.removeChildByName(label);
                 continue;
             }
@@ -109,10 +125,7 @@ public class CmdShadeVelocity {
 
         if (resolver.hasAccess(player, label)) {
             event.setResult(CommandExecuteEvent.CommandResult.denied());
-            player.sendMessage(Component.text(
-                    "[\uD83D\uDD0E] Unknown command. Type \"/help\" for help.",
-                    NamedTextColor.DARK_RED
-            ));
+            player.sendMessage(unknownCommandMessage);
         }
     }
 
@@ -129,7 +142,7 @@ public class CmdShadeVelocity {
         event.getSuggestions().removeIf(suggestion -> {
             String s = suggestion.toLowerCase(Locale.ROOT);
             if (s.startsWith("/")) s = s.substring(1);
-            if (s.indexOf(':') >= 0) return true;
+            if (hideNamespacedCommands && s.indexOf(':') >= 0) return true;
             return resolver.hasAccess(player, s);
         });
     }

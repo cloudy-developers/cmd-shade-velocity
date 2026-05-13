@@ -6,7 +6,7 @@ on:
       - '**'
   push:
     branches-ignore:
-      - stable   # на stable работает release.yml, чтобы не дублировать сборку
+      - stable
 
 jobs:
   build:
@@ -16,11 +16,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 26
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '26'
+          java-version: '21'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -34,6 +34,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: shadow-jar-${{ github.sha }}
-          path: build/libs/*-all.jar
+          path: build/libs/*.jar
           retention-days: 7
           if-no-files-found: error
