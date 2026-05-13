@@ -11,13 +11,23 @@ repositories {
 dependencies {
     compileOnly("com.velocitypowered:velocity-api:3.5.0-SNAPSHOT")
     annotationProcessor("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+
+    implementation("com.electronwill.night-config:toml:3.8.4")
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(26)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 tasks {
+    shadowJar {
+        archiveClassifier.set("")
+        relocate(
+            "com.electronwill.nightconfig",
+            "smp.cloud.cmdShadeVelocity.libs.nightconfig"
+        )
+    }
+
     build {
         dependsOn(shadowJar)
     }
@@ -32,5 +42,5 @@ tasks {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
-    options.release.set(26)
+    options.release.set(21)
 }
