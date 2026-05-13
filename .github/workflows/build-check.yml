@@ -6,7 +6,7 @@ on:
       - '**'
   push:
     branches-ignore:
-      - stable   # на stable работает release.yml, чтобы не дублировать сборку
+      - stable
 
 jobs:
   build:
@@ -34,6 +34,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: shadow-jar-${{ github.sha }}
-          path: build/libs/*-all.jar
+          path: build/libs/*.jar
           retention-days: 7
           if-no-files-found: error
