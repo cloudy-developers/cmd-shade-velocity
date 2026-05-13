@@ -1,0 +1,56 @@
+name: Build & Release
+
+on:
+  push:
+    branches:
+      - stable
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build with shadowJar
+        run: ./gradlew clean shadowJar --no-daemon
+
+      - name: Read project version
+        id: version
+        run: |
+          VERSION=$(./gradlew -q printVersion 2>/dev/null || echo "")
+          if [ -z "$VERSION" ]; then
+            # fallback: берём версию из gradle.properties, иначе используем дату + номер запуска
+            VERSION=$(grep -E '^version' gradle.properties | cut -d'=' -f2 | tr -d ' ' || true)
+          fi
+          if [ -z "$VERSION" ]; then
+            VERSION="$(date +'%Y.%m.%d')-build.${{ github.run_number }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: build/libs/*-all.jar

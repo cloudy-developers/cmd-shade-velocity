@@ -1,0 +1,11 @@
+{
+  "id": "cmd-shade-velocity",
+  "name": "cmd-shade-velocity",
+  "version": "${version}",
+  "main": "smp.cloud.cmdShadeVelocity.CmdShadeVelocity",
+  "description": "A Velocity plugin for hiding all necessary commands in chat from players. Permissions to view and use a command can be granted, for example, through LuckPerms.",
+  "url": "https://github.com/cloudy-developers/cmd-shade-velocity",
+  "authors": [
+    "losexds"
+  ]
+}
